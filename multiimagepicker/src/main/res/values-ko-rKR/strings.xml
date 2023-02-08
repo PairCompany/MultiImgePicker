@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="toast_under_min">최소 수량(%d) 미달</string>
+    <string name="toast_over_max">최대 수량(%d) 초과</string>
+    <string name="confirm">확인</string>
+</resources>

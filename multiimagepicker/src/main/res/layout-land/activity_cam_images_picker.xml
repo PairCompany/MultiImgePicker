@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+        <import type="android.view.View" />
+        <variable
+            name="activity"
+            type="com.jhc.multiimagepicker.ui.CamImagePickerActivity" />
+
+        <variable
+            name="viewModel"
+            type="com.jhc.multiimagepicker.viewmodel.CamImagesPickerViewModel" />
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/black"
+        android:orientation="horizontal"
+        tools:context=".ui.imagespicker.CamImagesPickActivity">
+
+        <View
+            android:id="@+id/bg_top_control"
+            android:layout_width="40dp"
+            android:layout_height="match_parent"
+            android:background="@color/black"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toLeftOf="@id/cam_view"/>
+
+        <ImageView
+            android:id="@+id/btn_camera_switch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="@{()->activity.cameraSwitch()}"
+            android:visibility="@{activity.builder.lensFacingSwitcher ? View.VISIBLE : View.GONE }"
+            android:layout_marginBottom="10dp"
+            app:layout_constraintLeft_toLeftOf="@id/bg_top_control"
+            app:layout_constraintRight_toRightOf="@id/bg_top_control"
+            app:layout_constraintBottom_toBottomOf="@id/bg_top_control"
+            app:layout_constraintTop_toBottomOf="@id/btn_flash"
+            app:srcCompat="@drawable/ic_cameraswitch" />
+
+        <ImageView
+            android:id="@+id/btn_flash"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="@{()->activity.torchSwitch()}"
+            android:layout_marginTop="10dp"
+            app:layout_constraintVertical_chainStyle="spread_inside"
+            app:layout_constraintLeft_toLeftOf="@id/bg_top_control"
+            app:layout_constraintRight_toRightOf="@id/bg_top_control"
+            app:layout_constraintBottom_toTopOf="@id/btn_camera_switch"
+            app:layout_constraintTop_toTopOf="@id/bg_top_control"
+            app:srcCompat="@drawable/ic_flashlight_on" />
+
+        <androidx.camera.view.PreviewView
+            android:id="@+id/cam_view"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            app:layout_constraintLeft_toRightOf="@id/bg_top_control"
+            app:layout_constraintRight_toLeftOf="@id/rc_images" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rc_images"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:paddingLeft="5dp"
+            app:images="@{viewModel.images}"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            app:layout_constraintLeft_toRightOf="@id/cam_view"
+            app:layout_constraintRight_toLeftOf="@id/btn_camera_capture"
+            tools:itemCount="1"
+            tools:listitem="@layout/item_selected_image"
+            tools:orientation="vertical" />
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btn_camera_capture"
+            android:layout_width="70dp"
+            android:layout_height="70dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="24dp"
+            android:background="@drawable/round"
+            android:onClick="@{()->activity.cameraCaptured()}"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toRightOf="@id/rc_images"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent"/>
+
+        <Button
+            android:id="@+id/btn_confirm"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:background="@android:color/transparent"
+            android:onClick="@{()->activity.confirmClick()}"
+            android:gravity="right|center"
+            android:text="@{(activity.builder.showCount ? (viewModel.imagesSize + ` / ` + activity.builder.getMinMaxText() + `\n` ) : ``) + ((activity.builder.textConfirm == null) ? @string/confirm : activity.builder.textConfirm)}"
+            android:textColor="@color/white"
+            app:layout_constraintEnd_toEndOf="@id/btn_camera_capture"
+            app:layout_constraintStart_toStartOf="@id/btn_camera_capture"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="0 / 1~5\n확인" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</layout>
