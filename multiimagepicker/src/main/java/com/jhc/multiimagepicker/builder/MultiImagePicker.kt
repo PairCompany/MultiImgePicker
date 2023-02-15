@@ -6,6 +6,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Parcelable
+import androidx.annotation.StringRes
 import com.gun0912.tedonactivityresult.TedOnActivityResult
 import com.jhc.multiimagepicker.common.Const
 import com.jhc.multiimagepicker.ui.CamImagePickerActivity
@@ -27,10 +28,14 @@ class MultiImagePicker {
         private var context: Context? = null,
         var showCount: Boolean = true,
         internal var minCount: Int = 0,
-        internal var maxCount: Int = Int.MAX_VALUE,
+        internal var maxCount: Int = 1000,
         var textConfirm: String? = null,
-        var textUnderMin: String? = null,
-        var textOverMax: String? = null,
+        internal var textUnderMin: String? = null,
+        internal var textOverMax: String? = null,
+        internal var textPermissionRequest: String? = null,
+        internal var textPermissionRequestMsg: String? = null,
+        internal var textPermissionDenied: String? = null,
+        internal var textPermissionDeniedMsg: String? = null,
         var isLensFacingBack: Boolean = true,
         var lensFacingSwitcher: Boolean = true,
         internal var orientationVertical: Boolean = true,
@@ -60,16 +65,30 @@ class MultiImagePicker {
          *  '%d' will be change to maxCount
          *
          *  ex) "over maximum (%d)" -> "over maximum (2)"
+         *  @param textPermissionRequest title of permission request dialog
+         *  @param permissionRequestMsg message of permission request dialog
+         *  @param permissionDenied title of permission denied dialog
+         *  @param permissionDeniedMsg message of permission denied dialog
          */
         fun setTexts(
             confirm: String? = null,
             underMin: String? = null,
-            overMax: String? = null
+            overMax: String? = null,
+            permissionRequest: String? = null,
+            permissionRequestMsg: String? = null,
+            permissionDenied: String? = null,
+            permissionDeniedMsg: String? = null,
         ): Builder = apply {
             textConfirm = confirm
             textUnderMin = underMin
             textOverMax = overMax
+            textPermissionRequest = permissionRequest
+            textPermissionRequestMsg = permissionRequestMsg
+            textPermissionDenied = permissionDenied
+            textPermissionDenied = permissionDeniedMsg
         }
+
+        internal fun getText(text: String?, @StringRes textId: Int): String = text ?: context?.resources?.getString(textId) ?: ""
 
         fun isLensFacingBack(value: Boolean): Builder = apply { isLensFacingBack = value }
 

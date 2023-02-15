@@ -3,4 +3,8 @@
     <string name="toast_under_min">under minimum quantity(%d)</string>
     <string name="toast_over_max">over max quantity(%d)</string>
     <string name="confirm">confirm</string>
+    <string name="permission_request">Permission Request</string>
+    <string name="permission_request_msg">need permission to use camara</string>
+    <string name="permission_denied">Permission Denied</string>
+    <string name="permission_denied_msg">please allow camara permission at setting</string>
 </resources>

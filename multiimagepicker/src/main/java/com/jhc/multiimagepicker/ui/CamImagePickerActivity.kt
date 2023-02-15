@@ -1,12 +1,15 @@
 package com.jhc.multiimagepicker.ui
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
 import android.content.pm.ActivityInfo
+import android.content.pm.PackageManager
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
+import android.view.View
 import android.view.animation.AlphaAnimation
 import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
@@ -18,6 +21,8 @@ import androidx.lifecycle.LifecycleOwner
 import com.google.common.util.concurrent.ListenableFuture
 import java.io.File
 import androidx.activity.viewModels
+import com.gun0912.tedpermission.PermissionListener
+import com.gun0912.tedpermission.normal.TedPermission
 import com.jhc.multiimagepicker.builder.MultiImagePicker
 import com.jhc.multiimagepicker.common.Const
 import com.jhc.multiimagepicker.common.Sound
@@ -34,14 +39,16 @@ internal class CamImagePickerActivity : AppCompatActivity() {
     val viewModel: CamImagesPickerViewModel by viewModels { CamImagesPickerViewModel.Factory(builder) }
 
     val builder by lazy {
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
-            intent.getParcelableExtra(Const.EXTRA_BUILDER, MultiImagePicker.Builder::class.java) ?: MultiImagePicker.Builder()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+            intent.getParcelableExtra(Const.EXTRA_BUILDER, MultiImagePicker.Builder::class.java)
+                ?: MultiImagePicker.Builder()
         else
             @Suppress("DEPRECATION")
-            intent.getParcelableExtra<MultiImagePicker.Builder>(Const.EXTRA_BUILDER) ?: MultiImagePicker.Builder()
+            intent.getParcelableExtra<MultiImagePicker.Builder>(Const.EXTRA_BUILDER)
+                ?: MultiImagePicker.Builder()
     }
 
-    private lateinit var cameraProviderFuture : ListenableFuture<ProcessCameraProvider>
+    private lateinit var cameraProviderFuture: ListenableFuture<ProcessCameraProvider>
 
     private var camera: Camera? = null
 
@@ -49,12 +56,12 @@ internal class CamImagePickerActivity : AppCompatActivity() {
 
     private val sound = Sound()
 
-    private fun initOrientation(){
+    private fun initOrientation() {
         this.requestedOrientation =
-            if(builder.orientationFix) {
-                if(builder.orientationVertical) ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+            if (builder.orientationFix) {
+                if (builder.orientationVertical) ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
                 else ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-            }else {
+            } else {
                 ActivityInfo.SCREEN_ORIENTATION_SENSOR
             }
     }
@@ -77,19 +84,21 @@ internal class CamImagePickerActivity : AppCompatActivity() {
         cameraProviderFuture = ProcessCameraProvider.getInstance(this).apply {
             addListener(Runnable {
                 val cameraProvider = cameraProviderFuture.get()
-                val lensFacing = if(builder.isLensFacingBack) CameraSelector.LENS_FACING_BACK else CameraSelector.LENS_FACING_FRONT
-                camera = bindPreview(cameraProvider = cameraProvider, lensFacing = lensFacing).apply {
-                    cameraControl.enableTorch(viewModel.isTorchOn.value ?: false)
-                }
+                val lensFacing =
+                    if (builder.isLensFacingBack) CameraSelector.LENS_FACING_BACK else CameraSelector.LENS_FACING_FRONT
+                camera =
+                    bindPreview(cameraProvider = cameraProvider, lensFacing = lensFacing).apply {
+                        cameraControl.enableTorch(viewModel.isTorchOn.value ?: false)
+                    }
 
 
                 initOrientation()
             }, ContextCompat.getMainExecutor(this@CamImagePickerActivity))
         }
-        
-        viewModel.isTorchOn.observe(this){
+
+        viewModel.isTorchOn.observe(this) {
             binding.btnFlash.setImageResource(
-                if(it) R.drawable.ic_flashlight_on else R.drawable.ic_flashlight_off
+                if (it) R.drawable.ic_flashlight_on else R.drawable.ic_flashlight_off
             )
 
             camera?.cameraControl?.enableTorch(it)
@@ -102,19 +111,25 @@ internal class CamImagePickerActivity : AppCompatActivity() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        if(checkPermission()) binding.tvPermission.visibility = View.GONE
+    }
+
     private var isLensFacingBack = true
     private fun bindPreview(
-        cameraProvider : ProcessCameraProvider,
+        cameraProvider: ProcessCameraProvider,
         previewView: PreviewView = binding.camView,
         imageCapture: ImageCapture = this.imageCapture,
         lensFacing: Int? = null
     ): Camera {
-        val preview : Preview = Preview.Builder()
+        val preview: Preview = Preview.Builder()
             .build()
 
-        val mLensFacing = lensFacing ?: if(this.isLensFacingBack) CameraSelector.LENS_FACING_FRONT else CameraSelector.LENS_FACING_BACK
+        val mLensFacing = lensFacing
+            ?: if (this.isLensFacingBack) CameraSelector.LENS_FACING_FRONT else CameraSelector.LENS_FACING_BACK
 
-        val cameraSelector : CameraSelector = CameraSelector.Builder()
+        val cameraSelector: CameraSelector = CameraSelector.Builder()
             .requireLensFacing(mLensFacing)
             .build()
 
@@ -123,7 +138,12 @@ internal class CamImagePickerActivity : AppCompatActivity() {
         preview.setSurfaceProvider(previewView.surfaceProvider)
 
         cameraProvider.unbindAll()
-        return cameraProvider.bindToLifecycle(this as LifecycleOwner, cameraSelector, imageCapture, preview)
+        return cameraProvider.bindToLifecycle(
+            this as LifecycleOwner,
+            cameraSelector,
+            imageCapture,
+            preview
+        )
     }
 
     /**
@@ -131,19 +151,27 @@ internal class CamImagePickerActivity : AppCompatActivity() {
      */
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
-        if(hasFocus){
+        if (hasFocus) {
             window.statusBarColor = Color.BLACK
             window.navigationBarColor = Color.BLACK
         }
     }
 
     private var isCapturing = false
-    fun cameraCaptured(){
-        if(viewModel.checkMaxCount(builder.maxCount)) {
-            if(isCapturing) return
+    fun cameraCaptured() {
+        if(!checkPermission()){
+            requestPermission()
+            return
+        }
+
+        if (viewModel.checkMaxCount(builder.maxCount)) {
+            if (isCapturing) return
             else isCapturing = true
 
-            val file = File(builder.filePath ?: this.cacheDir, builder.fileName(viewModel.imagesSize.value ?: 0))
+            val file = File(
+                builder.filePath ?: this.cacheDir,
+                builder.fileName(viewModel.imagesSize.value ?: 0)
+            )
             val outputFileOptions = ImageCapture.OutputFileOptions.Builder(file).build()
 
             imageCapture.takePicture(outputFileOptions, ContextCompat.getMainExecutor(this),
@@ -164,29 +192,29 @@ internal class CamImagePickerActivity : AppCompatActivity() {
                     }
                 }
             )
-        }else{
+        } else {
             toast(
-                builder.textOverMax?.replace("%d", builder.maxCount.toString()) ?:
-                getString(R.string.toast_over_max, builder.maxCount)
+                builder.textOverMax?.replace("%d", builder.maxCount.toString())
+                    ?: getString(R.string.toast_over_max, builder.maxCount)
             )
         }
     }
 
-    fun cameraSwitch(){
+    fun cameraSwitch() {
         bindPreview(cameraProviderFuture.get())
     }
 
-    fun torchSwitch(){
+    fun torchSwitch() {
         viewModel.isTorchOn.value = !(viewModel.isTorchOn.value ?: false)
     }
 
-    fun confirmClick(){
-        if(!viewModel.checkMinCount(builder.minCount)){
+    fun confirmClick() {
+        if (!viewModel.checkMinCount(builder.minCount)) {
             toast(
-                builder.textUnderMin?.replace("%d", builder.minCount.toString()) ?:
-                getString(R.string.toast_under_min, builder.minCount)
+                builder.textUnderMin?.replace("%d", builder.minCount.toString())
+                    ?: getString(R.string.toast_under_min, builder.minCount)
             )
-        }else {
+        } else {
             val data = Intent().apply {
                 putParcelableArrayListExtra(
                     Const.EXTRA_SELECTED_URIS, viewModel.images.value?.let { it1 -> ArrayList(it1) }
@@ -195,6 +223,34 @@ internal class CamImagePickerActivity : AppCompatActivity() {
             setResult(Activity.RESULT_OK, data)
             finish()
         }
+    }
+
+    private fun checkPermission(): Boolean =
+        ContextCompat.checkSelfPermission(
+            this,
+            android.Manifest.permission.CAMERA
+        ) == PackageManager.PERMISSION_GRANTED
+
+    fun requestPermission(){
+        TedPermission.create()
+            .setRationaleTitle(builder.getText(builder.textPermissionRequest, R.string.permission_request))
+            .setRationaleMessage(builder.getText(builder.textPermissionRequestMsg, R.string.permission_request_msg))
+            .setDeniedTitle(builder.getText(builder.textPermissionDenied, R.string.permission_denied))
+            .setDeniedMessage(builder.getText(builder.textPermissionDeniedMsg, R.string.permission_denied_msg))
+            .setPermissions(Manifest.permission.CAMERA)
+            .setPermissionListener(
+                object : PermissionListener {
+                    override fun onPermissionGranted() {
+                        binding.tvPermission.visibility = View.GONE
+                    }
+
+                    override fun onPermissionDenied(deniedPermissions: MutableList<String>?) {
+                        binding.tvPermission.visibility = View.VISIBLE
+                        toast(R.string.permission_denied)
+                    }
+                }
+            )
+            .check()
     }
 
 }

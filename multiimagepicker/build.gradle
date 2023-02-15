@@ -59,4 +59,7 @@ dependencies {
 
     // ActivityForResult
     implementation 'io.github.ParkSangGwon:tedonactivityresult:1.1.2'
+
+    //  tedPermission
+    implementation 'io.github.ParkSangGwon:tedpermission-normal:3.3.0'
 }

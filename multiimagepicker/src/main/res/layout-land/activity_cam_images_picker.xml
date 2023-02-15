@@ -62,6 +62,18 @@
             app:layout_constraintLeft_toRightOf="@id/bg_top_control"
             app:layout_constraintRight_toLeftOf="@id/rc_images" />
 
+        <TextView
+            android:id="@+id/tv_permission"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/permission_request_msg"
+            android:textColor="@color/white"
+            android:onClick="@{() -> activity.requestPermission()}"
+            app:layout_constraintTop_toTopOf="@id/cam_view"
+            app:layout_constraintBottom_toBottomOf="@id/cam_view"
+            app:layout_constraintStart_toStartOf="@id/cam_view"
+            app:layout_constraintEnd_toEndOf="@id/cam_view"/>
+
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rc_images"
             android:layout_width="wrap_content"

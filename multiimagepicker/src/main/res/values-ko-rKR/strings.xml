@@ -3,4 +3,8 @@
     <string name="toast_under_min">최소 수량(%d) 미달</string>
     <string name="toast_over_max">최대 수량(%d) 초과</string>
     <string name="confirm">확인</string>
+    <string name="permission_request">권한요청</string>
+    <string name="permission_request_msg">카메라를사용하기위해서 권한이 필요합니다</string>
+    <string name="permission_denied">권한 거부됨</string>
+    <string name="permission_denied_msg">설정에서 카메라 권한을 허용해주세요</string>
 </resources>
